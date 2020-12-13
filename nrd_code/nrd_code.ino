@@ -37,9 +37,13 @@
  */
 #include <Adafruit_SSD1306.h>
 #include <splash.h>
+#include <Wire.h>
+#define OLED_RESET 4
+Adafruit_SSD1306 display(OLED_RESET);
 
 // Pins
 const int GEIGER_COUNTER_PIN = 3;
+int OLED_SCREEN_I2C_ADDRESS = -1; // -1 = disabled
 
 // Variables
 long count = 0;
@@ -61,6 +65,12 @@ void setup() {
   
   attachInterrupt(digitalPinToInterrupt(GEIGER_COUNTER_PIN), tick, FALLING); //define external interrupts
   Serial.println("Init arduino geiger counter");
+
+  OLED_SCREEN_I2C_ADDRESS = findOledScreen();
+  if (OLED_SCREEN_I2C_ADDRESS != -1) {
+    display.begin(SSD1306_SWITCHCAPVCC, /* OLED_SCREEN_I2C_ADDRESS */0x3C); // Todo, correct this 0x3C is example hex address
+    display.clearDisplay();
+  }
 }
 
 
@@ -75,6 +85,7 @@ void loop() {
     Serial.print(";"); 
     Serial.print("uSv/h=");
     Serial.println(usvh, 4);
+    writeOledScreenText((String) countPerMinute, (String) usvh); // Todo, verify this
     count = 0;
   }
 }
@@ -88,4 +99,45 @@ void tick() {
   while(digitalRead(GEIGER_COUNTER_PIN) == 0){
   }
   attachInterrupt(0, tick, FALLING);
+}
+
+
+
+/**
+ * Find first responding i2c address
+ * because we only have one i2c device connected (hopefully)
+ */
+int findOledScreen() {
+  Serial.println ("Scanning for I2C Oled screen.");
+  byte count = 0;
+  Wire.begin();
+  for (byte i = 1; i < 127; i++) {
+    Wire.beginTransmission (i);
+    if (Wire.endTransmission () == 0) {
+      Serial.print ("Found i2c address: ");
+      Serial.print (i, DEC);
+      Serial.print (" | ");      
+      Serial.print (i, HEX);
+      return i;
+      count++;
+      delay (1); 
+      } 
+  }
+  return -1;
+}
+
+
+/**
+ * Write oled screen content
+ */
+void writeOledScreenText(String cpm, String usvh) {
+  if (OLED_SCREEN_I2C_ADDRESS != -1) {
+    display.setTextSize(1);
+    display.setTextColor(WHITE);
+    display.setCursor(0,0); // X, Y
+    display.println(cpm);
+    display.setCursor(0,1); // X, Y
+    display.println(usvh);
+    display.display();
+  }
 }
