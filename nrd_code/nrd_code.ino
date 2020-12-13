@@ -30,6 +30,13 @@
     cpm=816;uSv/h=6.6259
   */
 
+/* 
+ *  Oled screen support
+ *  To enable following screen support you need to install libs: "Adafruit BusIO", "Adafruit-GFX-Library" and "Adafruit_SSD1306"
+ *  Nano I2C pins: SDA -> A4; SCL -> A5
+ */
+#include <Adafruit_SSD1306.h>
+#include <splash.h>
 
 // Pins
 const int GEIGER_COUNTER_PIN = 3;
