@@ -5,6 +5,7 @@ This repository exists so that app users can get code, open issues and make cont
 ### Related links
 [Android Application](https://play.google.com/store/apps/details?id=com.nitramite.radiationdetector)  
 [Web page](http://www.nitramite.com/radiation-detector.html)  
+[Youtube promo video](https://youtu.be/VzV9t7CP7Yc)  
 
 ### Schematic
 Repository has updated Schematic made with Fritzing
