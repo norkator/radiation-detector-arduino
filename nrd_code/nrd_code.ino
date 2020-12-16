@@ -8,7 +8,7 @@
 * Changelog
 * # 15.06.2019, Initial code
 * # 16.06.2019, Added Serial.println("t;"); to play sound on Android app
-* 
+* # xx.12.2020, Week 51, Added code for i2c screen support, requested by user 
 */
 
 /**
@@ -25,15 +25,20 @@
  */
 
  /**
-    cpm=924;uSv/h=7.5029
-    cpm=780;uSv/h=6.3336
-    cpm=816;uSv/h=6.6259
+  * Sample output
+  * cpm=924;uSv/h=7.5029
+  * cpm=780;uSv/h=6.3336
+  * cpm=816;uSv/h=6.6259
   */
 
 /* 
  *  Oled screen support
  *  To enable following screen support you need to install libs: "Adafruit BusIO", "Adafruit-GFX-Library" and "Adafruit_SSD1306"
- *  Nano I2C pins: SDA -> A4; SCL -> A5
+ *  Display pins:
+ *     SDA -> A4 (i2c)
+ *     SCL -> A5 (i2c)
+ *     GND -> Ground
+ *     VDD -> 5v (Screen pin labeled as VCC or VDD)
  */
 #include <Adafruit_SSD1306.h>
 #include <splash.h>
@@ -43,13 +48,16 @@ Adafruit_SSD1306 display(OLED_RESET);
 
 // Pins
 const int GEIGER_COUNTER_PIN = 3;
-int OLED_SCREEN_I2C_ADDRESS = -1; // -1 = disabled
+String OLED_SCREEN_I2C_ADDRESS = ""; // "" = disabled
 
 // Variables
 long count = 0;
 long countPerMinute = 0;
 float usvh = 0.0;
 long timePreviousMeassure = 0;
+
+// Constants
+String EMPTY_STRING = "";
 
 // Conversion factor - CPM to uSV/h
 #define CONV_FACTOR 0.00812
@@ -67,8 +75,9 @@ void setup() {
   Serial.println("Init arduino geiger counter");
 
   OLED_SCREEN_I2C_ADDRESS = findOledScreen();
-  if (OLED_SCREEN_I2C_ADDRESS != -1) {
-    display.begin(SSD1306_SWITCHCAPVCC, /* OLED_SCREEN_I2C_ADDRESS */0x3C); // Todo, correct this 0x3C is example hex address
+  if (OLED_SCREEN_I2C_ADDRESS != EMPTY_STRING) {
+    // Just note, every tutorial screen has same address, 0x3C
+    display.begin(SSD1306_SWITCHCAPVCC, (OLED_SCREEN_I2C_ADDRESS, HEX)); // Todo, string --> hex, this wont probably work
     display.clearDisplay();
   }
 }
@@ -107,37 +116,55 @@ void tick() {
  * Find first responding i2c address
  * because we only have one i2c device connected (hopefully)
  */
-int findOledScreen() {
+String findOledScreen() {
   Serial.println ("Scanning for I2C Oled screen.");
   byte count = 0;
+  String address = EMPTY_STRING;
   Wire.begin();
   for (byte i = 1; i < 127; i++) {
     Wire.beginTransmission (i);
     if (Wire.endTransmission () == 0) {
+      address += "0x";
+      
+      if (count < 16) {
+        address += "0";
+      }
+        
       Serial.print ("Found i2c address: ");
       Serial.print (i, DEC);
-      Serial.print (" | ");      
+      Serial.print (" | ");
       Serial.print (i, HEX);
-      return i;
+
+      address += (i, HEX);
+      return address;
+
       count++;
       delay (1); 
       } 
   }
-  return -1;
+  return EMPTY_STRING;
 }
 
 
 /**
  * Write oled screen content
+ * Good tutorial: https://randomnerdtutorials.com/guide-for-oled-display-with-arduino/
  */
 void writeOledScreenText(String cpm, String usvh) {
-  if (OLED_SCREEN_I2C_ADDRESS != -1) {
+  if (OLED_SCREEN_I2C_ADDRESS != EMPTY_STRING) {
+    // Default text settings
     display.setTextSize(1);
     display.setTextColor(WHITE);
-    display.setCursor(0,0); // X, Y
-    display.println(cpm);
-    display.setCursor(0,1); // X, Y
-    display.println(usvh);
+
+    // First line
+    display.setCursor(0,20); // X, Y
+    display.println("CPM: " + cpm);
+
+    // Second line
+    display.setCursor(0,50); // X, Y
+    display.println("uSv/h: " + usvh);
+
+    // Draw content
     display.display();
   }
 }
