@@ -11,3 +11,29 @@ This repository exists so that app users can get code, open issues and make cont
 Repository has updated Schematic made with Fritzing
 
 ![Schematic](./schematic.png) 
+
+
+### Oled screen support
+
+Here is some information about Oled screen support.
+
+#### Module
+SSD1306 Oled
+
+#### Pinouts
+* SDA -> A4 (i2c)
+* SCL -> A5 (i2c)
+* GND -> Ground
+* VDD -> 5v (Screen pin labeled as VCC or VDD)
+
+#### Required libraries
+* Adafruit BusIO
+* Adafruit-GFX-Library
+* Adafruit_SSD1306
+
+#### More information
+Good tutorial:  
+https://randomnerdtutorials.com/guide-for-oled-display-with-arduino/
+
+#### Real life image
+![OledScren](./i2c_screen.jpg) 
